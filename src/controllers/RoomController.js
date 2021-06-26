@@ -8,20 +8,53 @@ module.exports = {
 
         let roomId = '';
 
-        for (let i = 0; i < 6; i++) {
-            roomId += Math.floor(Math.random() * 10);
+        let isRoom = true;
+
+        while (isRoom) {
+            for (let i = 0; i < 6; i++) {
+                roomId += Math.floor(Math.random() * 10);
+            }
+
+            const roomsExistIds = await db.all(`SELECT id FROM rooms`);
+            isRoom = roomsExistIds.some(roomExistIds => roomExistIds === roomId);
+            
+            if(!isRoom) {
+                await db.run(`
+                    INSERT INTO rooms (
+                        id, pass
+                    ) VALUES (
+                        ${parseInt(roomId)},
+                        ${pass}
+                    )
+                `);
+            }
         }
 
-        await db.run(`
-            INSERT INTO rooms (
-                id, pass
-            ) VALUES (
-                ${parseInt(roomId)},
-                ${pass}
-            )
-        `);
-
         await db.close();
+
+        res.redirect(`/room/${roomId}`);
+    },
+
+    async open(req, res) {
+        const db = await Database();
+
+        const roomId = req.params.room;
+
+        const questions = await db.all(`SELECT * FROM questions WHERE room = ${roomId} and read = 0`);
+        const questionsRead = await db.all(`SELECT * FROM questions WHERE room = ${roomId} and read = 1`);
+        let isNoQuestions
+
+        if(questions == 0) {
+            if(questionsRead == 0) {
+                isNoQuestions = true;
+            }
+        }
+
+        res.render('room', { roomId, questions, questionsRead, isNoQuestions });
+    },
+
+    enter(req, res) {
+        const roomId = req.body.roomId;
 
         res.redirect(`/room/${roomId}`);
     }

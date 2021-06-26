@@ -25,7 +25,7 @@ function handleClick(event, check = true) {
 
     const slug = check ? "check" : "delete";
     const roomId = document.querySelector("#room-id").dataset.id;
-    const questionId = document.target.dataset.id;
+    const questionId = event.target.dataset.id;
 
     const form = document.querySelector(".modal form");
     form.setAttribute("action", `/question/${roomId}/${questionId}/${slug}`);
